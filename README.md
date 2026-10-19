@@ -176,6 +176,27 @@ for v in {2..10}; do
     --save_metadata
 done
 ```
+Some results from the `0048` folders:
+
+cfg_scale=cfg_scale_view=10, lion dominates sunflower:
+
+![](assets/rotate_180.sunflower.lionFace.woodcut.10.png)
+
+cfg_scale=10,cfg_scale_view=6:
+
+![alt text](assets/rotate_180.sunflower.lionFace.woodcut.6.png)
+
+cfg_scale=10,cfg_scale_view=4, sunflower and lion are neck-and-neck:
+
+![alt text](assets/rotate_180.sunflower.lionFace.woodcut.4.png)
+
+cfg_scale=10,cfg_scale_view=2, sunflower dominates lion:
+
+![alt text](assets/rotate_180.sunflower.lionFace.woodcut.2.png)
+
+An interesting application is creating a sunflower-to-lion-face animation by varying the guidance scale of the second view. With the seed fixed at 48 and `cfg_scale=10`, the GIF below cycles through the nine `0048/sample_1024.Rotate180View.png` images generated with `cfg_scale_view` increasing from 2 to 10. As the second view receives more guidance, the sunflower gradually gives way to a lion's face. Each frame uses the same 180°-rotated orientation; the transition comes from changing the guidance scale.
+
+![alt text](assets/sunflower_to_lion_face.gif)
 
 ## Performance
 Inference uses 28756 MiB(around 28.1 GiB) of GPU memory. 50 inference steps take about a minute on one RTX 5090.
