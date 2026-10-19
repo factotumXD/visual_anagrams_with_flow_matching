@@ -198,5 +198,35 @@ An interesting application is creating a sunflower-to-lion-face animation by var
 
 ![alt text](assets/sunflower_to_lion_face.gif)
 
+## Conventional generation using current image generators fail to produce visual anagrams
+
+### Visual Anagram
+Prompt:
+```
+Visual illusions are images that change appearance or identity when transformed, such as by a rotation, a color inversion, or a jigsaw rearrangement.  Generate a visual anagram.
+```
+GPT-image(accessed October, 2026) output:
+
+![alt text](assets/visual_anagram_gpt.png)
+L2P output:
+
+![alt text](assets/visual_anaram_L2P.png)
+
+### Sunflower and Lion Face
+Prompt:
+```
+Visual illusions are images that change appearance or identity when transformed, such as by a rotation, a color inversion, or a jigsaw rearrangement. Generate this visual illusion: A woodcut of a sunflower that becomes a woodcut of a lion's face when rotated 180 degrees counterclockwise.
+```
+GPT-image(accessed October, 2026) output:
+
+![alt text](assets/rotate_180.sunflower.lionFace.woodcut.gpt.png)
+
+L2P output:
+
+![alt text](assets/rotate_180.sunflower.lionFace.woodcut.L2P.png)
+
+Both generate a combination of sunflower and a lion's face and ignore the rotation requirement.
+
 ## Performance
+
 Inference uses 28756 MiB(around 28.1 GiB) of GPU memory. 50 inference steps take about a minute on one RTX 5090.
