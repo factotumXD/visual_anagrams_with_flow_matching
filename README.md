@@ -122,6 +122,43 @@ Views are derived from the base class `BaseView`. You can see many examples of t
 
 Additionally, if your view can be implemented as a permutation of pixels, you can probably get away with just saving a permutation array to disk and pasing it to the `PermuteView` class. See `permutations/make_inner_rotation_perm.py` and `get_view()` in `views.py` for an example of this.
 
+## How it works
+
+A visual anagram is a single image that matches a different prompt in each view. For example, the original image should look like "a snowy mountain village", while the same image rotated 90 degrees clockwise should look like "a horse". The method combines guidance from these views throughout sampling, using the pretrained L2P model without additional training.
+
+The core loop is implemented in [`sample_l2p`](visual_anagrams/samplers.py). L2P operates directly on RGB pixels, so the views can transform the noisy image itself. Starting from one Gaussian-noise image, each sampling step does the following:
+
+1. **Transform the shared image.** For each prompt/view pair, apply `view.view(image[0])` to the current noisy image. All views use the same image and timestep.
+2. **Predict a velocity for each view.** Run L2P on each transformed image with its corresponding prompt and classifier-free guidance (CFG). A flow velocity describes how the pixels change as the noise level changes.
+3. **Align the predictions.** Apply `view.inverse_view` to each predicted velocity. For the horse view, this rotates the velocity 90 degrees counterclockwise, bringing its suggested changes back into the original image's coordinates.
+4. **Combine the aligned velocities.** By default, take their mean. Now both the village and horse prompts contribute to one update of the shared pixels.
+5. **Advance the image.** Pass the combined velocity to the flow-matching scheduler, which moves the image to the next, lower noise level. Repeat until sampling finishes.
+
+For each view $i$, classifier-free guidance combines the positive-prompt velocity $v_i^{+}$ and negative-prompt velocity $v_i^{-}$:
+
+$$
+v_i^{\mathrm{CFG}} = v_i^{-} + s_i\left(v_i^{+} - v_i^{-}\right).
+$$
+
+The negative prompt is empty by default. The scale $s_i$ is `--cfg_scale` for `IdentityView` and `--cfg_scale_view` for all other views; the latter defaults to `--cfg_scale`. Increasing a view's scale strengthens its prompt guidance before the predictions are combined.
+
+For invertible views $T_i$, the default mean reduction can be written as
+
+$$
+\bar v(x_t,t)
+= \frac{1}{N}\sum_{i=1}^{N}
+T_i^{-1}\!\left[v_i^{\mathrm{CFG}}(T_i (x_t),prompt_i,t)\right],
+$$
+
+where $x_t$ is the shared noisy image, $t$ is the noise level, and $N$ is the number of views. The scheduler then takes an Euler step:
+
+$$
+x_{t'} = x_t + (t' - t)\,\bar v(x_t,t),
+\qquad t' > t.
+$$
+
+The final step uses $t'=1$. The sampler also supports summing the aligned velocities with `--reduction sum`; other reduction values select one view cyclically across steps.
+
 ## New feature
 Rather than using a single CFG scale for all prompts as in the original repo, now each prompt has its own CFG scale. This enalbes finer control of the saliency of prompts, as a higher CFG scale makes the output image follow the prompt closer.
 
